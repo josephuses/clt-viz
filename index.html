@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Central Limit Theorem Visualization</title>
+    
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f4f9;
+            color: #333;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        h1 { margin-bottom: 10px; }
+        
+        .description {
+            max-width: 700px;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+
+        .formula-row {
+            display: flex;
+            justify-content: space-around;
+            background-color: #f8f9fa;
+            padding: 10px;
+            border-radius: 4px;
+            margin-top: 10px;
+            border: 1px solid #e9ecef;
+        }
+
+        .controls {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-bottom: 20px;
+            align-items: center;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            min-width: 150px;
+        }
+
+        label { font-size: 12px; font-weight: bold; margin-bottom: 5px; text-transform: uppercase; color: #888; }
+        
+        select, input, button {
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        button {
+            background-color: #4682b4;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+            margin-top: auto;
+            height: 38px;
+            transition: background 0.2s;
+        }
+
+        button:hover { background-color: #315f85; }
+
+        .charts-container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .chart-box {
+            background: white;
+            padding: 10px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            position: relative;
+        }
+
+        .chart-title {
+            position: absolute;
+            top: 10px;
+            left: 20px;
+            font-size: 14px;
+            font-weight: bold;
+            color: #4682b4;
+        }
+
+        .bar { fill: #4682b4; }
+        .bar:hover { fill: #6baed6; }
+        .parent-bar { fill: #ccc; }
+        
+        .axis text { font-size: 10px; }
+        .value-display { font-size: 12px; color: #4682b4; font-weight: bold; margin-top: 2px;}
+
+    </style>
+</head>
+<body>
+
+    <h1>Central Limit Theorem</h1>
+    
+    <div class="description">
+        <p>
+            The Central Limit Theorem (CLT) states that if you take sufficiently large random samples from any population (regardless of its shape), the distribution of the sample means \( \bar{x} \) will be approximately Normal.
+        </p>
+        <div class="formula-row">
+            <div>
+                <strong>Mean of Means:</strong><br>
+                \( \mu_{\bar{x}} = \mu \)
+            </div>
+            <div>
+                <strong>Standard Error:</strong><br>
+                \( \sigma_{\bar{x}} = \frac{\sigma}{\sqrt{n}} \)
+            </div>
+        </div>
+    </div>
+
+    <div class="controls">
+        <div class="control-group">
+            <label>Parent Distribution</label>
+            <select id="distType">
+                <option value="uniform">Uniform</option>
+                <option value="normal">Normal</option>
+                <option value="exponential">Exponential (Skewed)</option>
+                <option value="bimodal">Bimodal</option>
+            </select>
+        </div>
+
+        <div class="control-group">
+            <label>Sample Size (n)</label>
+            <input type="range" id="sampleSize" min="1" max="50" value="5">
+            <span class="value-display" id="sampleSizeVal">5</span>
+        </div>
+
+        <div class="control-group">
+            <label>Number of Samples (k)</label>
+            <input type="range" id="numSamples" min="100" max="10000" step="100" value="1000">
+            <span class="value-display" id="numSamplesVal">1000</span>
+        </div>
+
+        <div class="control-group">
+            <label>&nbsp;</label>
+            <button onclick="runSimulation()">Run Simulation</button>
+        </div>
+    </div>
+
+    <div class="charts-container">
+        <div class="chart-box">
+            <div class="chart-title">Parent Population (Distribution of \( x \))</div>
+            <div id="parentChart"></div>
+        </div>
+
+        <div class="chart-box">
+            <div class="chart-title">Sampling Distribution (Distribution of \( \bar{x} \))</div>
+            <div id="sampleChart"></div>
+        </div>
+    </div>
+
+    <script>
+        // --- Configuration ---
+        const width = 700;
+        const height = 250;
+        const margin = {top: 40, right: 30, bottom: 40, left: 50};
+        
+        // --- Setup SVGs ---
+        function createSvg(id) {
+            return d3.select(id)
+                .append("svg")
+                .attr("width", width)
+                .attr("height", height)
+                .append("g")
+                .attr("transform", `translate(${margin.left},${margin.top})`);
+        }
+
+        const svgParent = createSvg("#parentChart");
+        const svgSample = createSvg("#sampleChart");
+
+        // X Scale
+        const x = d3.scaleLinear()
+            .domain([0, 100])
+            .range([0, width - margin.left - margin.right]);
+
+        // Add X axis
+        const xAxis = d3.axisBottom(x);
+        svgParent.append("g").attr("transform", `translate(0, ${height - margin.top - margin.bottom})`).call(xAxis);
+        svgSample.append("g").attr("transform", `translate(0, ${height - margin.top - margin.bottom})`).call(xAxis);
+
+        // --- Data Generation ---
+        function generateParentData(type, count) {
+            let data = [];
+            const genNormal = d3.randomNormal(50, 15);
+            const genUniform = d3.randomUniform(0, 100);
+            const genExp = d3.randomExponential(0.04); 
+            
+            for(let i=0; i<count; i++) {
+                let val;
+                if (type === 'uniform') val = genUniform();
+                else if (type === 'normal') val = genNormal();
+                else if (type === 'exponential') val = genExp();
+                else if (type === 'bimodal') {
+                    val = Math.random() < 0.5 ? d3.randomNormal(25, 10)() : d3.randomNormal(75, 10)();
+                }
+                
+                if(val < 0) val = 0;
+                if(val > 100) val = 100;
+                data.push(val);
+            }
+            return data;
+        }
+
+        function getMeans(parentData, n, k) {
+            let means = [];
+            const type = document.getElementById('distType').value;
+            for(let i=0; i<k; i++) {
+                let sum = 0;
+                let sampleBatch = generateParentData(type, n);
+                sum = d3.sum(sampleBatch);
+                means.push(sum / n);
+            }
+            return means;
+        }
+
+        // --- Drawing Function ---
+        function drawHistogram(svg, data, colorClass) {
+            const histogram = d3.bin()
+                .domain(x.domain())
+                .thresholds(x.ticks(40));
+            
+            const bins = histogram(data);
+
+            const y = d3.scaleLinear()
+                .range([height - margin.top - margin.bottom, 0]);
+            
+            y.domain([0, d3.max(bins, d => d.length)]);
+
+            const bars = svg.selectAll("rect")
+                .data(bins);
+
+            bars.join(
+                enter => enter.append("rect")
+                    .attr("class", colorClass)
+                    .attr("x", 1)
+                    .attr("transform", d => `translate(${x(d.x0)}, ${height - margin.top - margin.bottom})`)
+                    .attr("width", d => Math.max(0, x(d.x1) - x(d.x0) - 1))
+                    .attr("height", 0)
+                    .call(enter => enter.transition().duration(750)
+                        .attr("transform", d => `translate(${x(d.x0)}, ${y(d.length)})`)
+                        .attr("height", d => height - margin.top - margin.bottom - y(d.length))
+                    ),
+                update => update.transition().duration(750)
+                    .attr("transform", d => `translate(${x(d.x0)}, ${y(d.length)})`)
+                    .attr("height", d => height - margin.top - margin.bottom - y(d.length))
+                    .attr("width", d => Math.max(0, x(d.x1) - x(d.x0) - 1)),
+                exit => exit.remove()
+            );
+        }
+
+        // --- Main Simulation ---
+        function runSimulation() {
+            const distType = document.getElementById('distType').value;
+            const n = parseInt(document.getElementById('sampleSize').value);
+            const k = parseInt(document.getElementById('numSamples').value);
+
+            const parentData = generateParentData(distType, 10000); 
+            const sampleMeans = getMeans(null, n, k);
+
+            drawHistogram(svgParent, parentData, "parent-bar");
+            drawHistogram(svgSample, sampleMeans, "bar");
+        }
+
+        // --- Event Listeners ---
+        document.getElementById('sampleSize').addEventListener('input', function() {
+            document.getElementById('sampleSizeVal').innerText = this.value;
+        });
+        document.getElementById('numSamples').addEventListener('input', function() {
+            document.getElementById('numSamplesVal').innerText = this.value;
+        });
+        
+        document.getElementById('distType').addEventListener('change', runSimulation);
+
+        // Initial Run
+        runSimulation();
+
+    </script>
+</body>
+</html>
