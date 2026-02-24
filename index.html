@@ -26,7 +26,7 @@
         .controls { background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); display: flex; flex-direction: column; gap: 15px; }
         .control-group { display: flex; flex-direction: column; }
         label { font-size: 12px; font-weight: bold; text-transform: uppercase; color: #7f8c8d; margin-bottom: 5px; }
-        input[type=range], select { width: 100%; padding: 5px; }
+        input[type=range], select { width: 100%; padding: 5px; cursor: pointer; }
         
         /* Stats Display */
         .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
@@ -49,10 +49,7 @@
 <body>
 
 <div class="container">
-   <h1>CLT: Advanced Parent Distributions</h1>
-     <p>
-        Watch how even extreme parent populations—like a heavily skewed Chi-Square or a hollow U-Shape—still produce a beautiful, normal bell curve in the sampling distribution once \( n \) is large enough!
-    </p>
+   <h1>CLT: Stable Parent Population</h1>
     
     <div class="info-box">
         <p>The Central Limit Theorem predicts both the <strong>Center (Mean)</strong> and the <strong>Spread (Variance)</strong> of the sampling distribution.</p>
@@ -74,38 +71,55 @@
 
     <div class="dashboard">
         <div class="controls">
-            <div class="control-group">
-                <label>Parent Shape</label>
-                <select id="distType">
-                    <option value="normal">Normal (Bell Curve)</option>
-                    <option value="uniform">Uniform (Flat)</option>
-                    <option value="bimodal">Bimodal (Two Peaks)</option>
-                    <option value="exponential">Exponential (Right Skewed)</option>
-                    <option value="chisquare" selected>Chi-Square (df=3)</option>
-                    <option value="ushape">U-Shape (Beta)</option>
-                </select>
-            </div>
+            
+            <div style="background: #f8f9fa; padding: 10px; border-radius: 6px; border: 1px solid #e0e0e0;">
+                <h4 style="margin: 0 0 10px 0; font-size: 13px; color: #2c3e50;">1. Parent Population Settings</h4>
+                <div class="control-group">
+                    <label>Parent Shape</label>
+                    <select id="distType">
+                        <option value="normal">Normal (Bell Curve)</option>
+                        <option value="uniform">Uniform (Flat)</option>
+                        <option value="bimodal">Bimodal (Two Peaks)</option>
+                        <option value="exponential">Exponential (Right Skewed)</option>
+                        <option value="chisquare" selected>Chi-Square (df=3)</option>
+                        <option value="ushape">U-Shape (Beta)</option>
+                    </select>
+                </div>
 
-            <div class="control-group">
-                <label>Population Spread (\( \sigma \))</label>
-                <input type="range" id="sigmaSlider" min="5" max="25" step="1" value="15">
-                <div style="display:flex; justify-content:space-between; font-size:0.85em;">
-                    <span>Low Var</span>
-                    <span id="sigmaDisplay" style="font-weight:bold; color:#e67e22;">15</span>
-                    <span>High Var</span>
+                <div class="control-group" style="margin-top: 10px;">
+                    <label>Population Mean (\( \mu \))</label>
+                    <input type="range" id="muSlider" min="20" max="80" step="1" value="50">
+                    <div style="display:flex; justify-content:space-between; font-size:0.85em;">
+                        <span>Shift Left</span>
+                        <span id="muDisplay" style="font-weight:bold; color:#e67e22;">50</span>
+                        <span>Shift Right</span>
+                    </div>
+                </div>
+
+                <div class="control-group" style="margin-top: 10px;">
+                    <label>Population Spread (\( \sigma \))</label>
+                    <input type="range" id="sigmaSlider" min="5" max="25" step="1" value="15">
+                    <div style="display:flex; justify-content:space-between; font-size:0.85em;">
+                        <span>Low Var</span>
+                        <span id="sigmaDisplay" style="font-weight:bold; color:#e67e22;">15</span>
+                        <span>High Var</span>
+                    </div>
                 </div>
             </div>
 
-            <div class="control-group">
-                <label>Sample Size (n)</label>
-                <input type="range" id="nSlider" min="2" max="250" value="10">
-                <span id="nDisplay" style="text-align:right; font-weight:bold;">10</span>
-            </div>
+            <div style="background: #f8f9fa; padding: 10px; border-radius: 6px; border: 1px solid #e0e0e0; margin-top: 10px;">
+                <h4 style="margin: 0 0 10px 0; font-size: 13px; color: #2c3e50;">2. Sampling Settings</h4>
+                <div class="control-group">
+                    <label>Sample Size (n)</label>
+                    <input type="range" id="nSlider" min="2" max="250" value="10">
+                    <span id="nDisplay" style="text-align:right; font-weight:bold;">10</span>
+                </div>
 
-            <div class="control-group">
-                <label>Samples Drawn (k)</label>
-                <input type="range" id="kSlider" min="100" max="5000" step="100" value="2000">
-                <span id="kDisplay" style="text-align:right; font-weight:bold;">2000</span>
+                <div class="control-group" style="margin-top: 10px;">
+                    <label>Samples Drawn (k)</label>
+                    <input type="range" id="kSlider" min="100" max="5000" step="100" value="2000">
+                    <span id="kDisplay" style="text-align:right; font-weight:bold;">2000</span>
+                </div>
             </div>
 
             <hr style="width:100%; border:0; border-top:1px solid #eee;">
@@ -139,8 +153,8 @@
                     <span id="sampleVarVal" class="stat-val observed">0</span>
                 </div>
             </div>
-
-            <button onclick="runSimulation()" style="background:#27ae60; color:white; border:none; padding:10px; border-radius:4px; cursor:pointer; font-weight:bold; margin-top:10px;">Run Simulation</button>
+            
+            <button onclick="runSampling()" style="background:#27ae60; color:white; border:none; padding:10px; border-radius:4px; cursor:pointer; font-weight:bold; margin-top:10px;">Draw New Samples</button>
         </div>
 
         <div class="charts-area">
@@ -157,6 +171,10 @@
 </div>
 
 <script>
+    // --- Global State ---
+    let parentData = [];
+    let popStats = {};
+
     // --- Setup ---
     const margin = {top: 30, right: 20, bottom: 30, left: 40};
     const width = 600 - margin.left - margin.right;
@@ -178,9 +196,8 @@
     svgSample.append("g").attr("transform", `translate(0,${height})`).call(d3.axisBottom(x));
 
     // --- Advanced Data Generator ---
-    function generateParent(type, nPoints, targetSigma) {
+    function generateParent(type, nPoints, targetMean, targetSigma) {
         let raw = [];
-        const targetMean = 50; 
         
         // 1. Generate Raw Structural Shape
         if (type === 'normal') {
@@ -195,16 +212,13 @@
             raw = Array.from({length: nPoints}, () => Math.random() < 0.5 ? gen1() : gen2());
         }
         else if (type === 'exponential') {
-            // Right skewed
             raw = Array.from({length: nPoints}, d3.randomExponential(1));
         }
         else if (type === 'chisquare') {
-            // Chi-Square with df=3
             const norm = d3.randomNormal(0,1);
             raw = Array.from({length: nPoints}, () => Math.pow(norm(),2) + Math.pow(norm(),2) + Math.pow(norm(),2));
         }
         else if (type === 'ushape') {
-            // U-shape via Sine function mapping (approximates Beta 0.5, 0.5)
             const unif = d3.randomUniform(0, Math.PI/2);
             raw = Array.from({length: nPoints}, () => Math.pow(Math.sin(unif()), 2));
         }
@@ -216,7 +230,6 @@
         // 3. Transform to exact requested constraints (targetMean, targetSigma)
         let processedData = raw.map(d => {
             let val = ((d - rawMean) / rawSD) * targetSigma + targetMean;
-            // Clamp strictly for visual scale consistency
             return Math.max(0, Math.min(100, val));
         });
 
@@ -260,30 +273,45 @@
         );
     }
 
-    // --- Main Simulation ---
-    function runSimulation() {
+    // --- Main Logic ---
+    
+    // Step 1: Create the Population (Runs only when Pop settings change)
+    function updatePopulation() {
         const type = document.getElementById('distType').value;
         const targetSigma = parseFloat(document.getElementById('sigmaSlider').value);
+        const targetMean = parseFloat(document.getElementById('muSlider').value);
+
+        document.getElementById('sigmaDisplay').innerText = targetSigma;
+        document.getElementById('muDisplay').innerText = targetMean;
+
+        const popSize = 10000;
+        parentData = generateParent(type, popSize, targetMean, targetSigma);
+        popStats = getStats(parentData);
+
+        // Draw parent chart once
+        drawHist(svgParent, parentData, "#95a5a6");
+        
+        // Immediately draw new samples from this new population
+        runSampling();
+    }
+
+    // Step 2: Draw Samples (Runs when Sample settings change OR Pop changes)
+    function runSampling() {
         const n = parseInt(document.getElementById('nSlider').value);
         const k = parseInt(document.getElementById('kSlider').value);
 
-        document.getElementById('sigmaDisplay').innerText = targetSigma;
         document.getElementById('nDisplay').innerText = n;
         document.getElementById('kDisplay').innerText = k;
 
-        // Generate massive background population
-        const popSize = 10000;
-        const parentData = generateParent(type, popSize, targetSigma);
-        
-        // Sampling
         let sampleMeans = [];
+        const popSize = parentData.length;
+        
         for(let i=0; i<k; i++) {
             let sum = 0;
             for(let j=0; j<n; j++) sum += parentData[Math.floor(Math.random() * popSize)];
             sampleMeans.push(sum/n);
         }
 
-        const popStats = getStats(parentData);
         const sampleStats = getStats(sampleMeans);
         const theoreticalSampleVar = popStats.variance / n;
 
@@ -295,18 +323,22 @@
         document.getElementById('theoVarVal').innerText = theoreticalSampleVar.toFixed(2);
         document.getElementById('sampleVarVal').innerText = sampleStats.variance.toFixed(2);
 
-        // Graphics
-        drawHist(svgParent, parentData, "#95a5a6");
-        drawHist(svgSample, sampleMeans, "#8e44ad"); // Changed to purple to match the theme
+        // Draw Sample Chart
+        drawHist(svgSample, sampleMeans, "#8e44ad"); 
     }
 
-    // Event Listeners
-    document.getElementById('sigmaSlider').addEventListener('input', runSimulation);
-    document.getElementById('nSlider').addEventListener('input', runSimulation);
-    document.getElementById('kSlider').addEventListener('change', runSimulation);
-    document.getElementById('distType').addEventListener('change', runSimulation);
+    // --- Event Listeners ---
+    // Population controls trigger updatePopulation (which cascades to runSampling)
+    document.getElementById('distType').addEventListener('change', updatePopulation);
+    document.getElementById('sigmaSlider').addEventListener('input', updatePopulation);
+    document.getElementById('muSlider').addEventListener('input', updatePopulation);
 
-    runSimulation();
+    // Sampling controls ONLY trigger runSampling (parent distribution stays locked)
+    document.getElementById('nSlider').addEventListener('input', runSampling);
+    document.getElementById('kSlider').addEventListener('change', runSampling); // Using 'change' so it fires when you let go of the slider
+
+    // Initialize
+    updatePopulation();
 
 </script>
 
